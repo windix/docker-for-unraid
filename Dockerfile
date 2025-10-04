@@ -71,9 +71,13 @@ RUN wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O yt-
     && mv yt-dlp /usr/local/bin/
 
 # bdinfo
-RUN wget https://github.com/zoffline/BDInfoCLI-ng/raw/refs/heads/UHD_Support_CLI/prebuilt/BDInfoCLI-ng_v0.7.5.5.zip -O bdinfo-cli.zip \
-    && unzip bdinfo-cli.zip -d /app/bdinfo-cli/ \
-    && rm -f bdinfo-cli.zip
+RUN mkdir tmp_bdinfo \
+    && cd tmp_bdinfo \
+    && wget https://github.com/zoffline/BDInfoCLI-ng/raw/refs/heads/UHD_Support_CLI/prebuilt/BDInfoCLI-ng_v0.7.5.5.zip -O bdinfo-cli.zip \
+    && unzip bdinfo-cli.zip \
+    && mv BDInfoCLI-ng_v0.7.5.5 /app/bdinfo-cli \
+    && cd .. \
+    && rm -rf tmp_bdinfo
 
 # ruby-misc scripts
 # TODO split Gemfile
