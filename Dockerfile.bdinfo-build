@@ -1,0 +1,48 @@
+FROM ubuntu:24.04 AS mono-build
+
+RUN apt update \
+    && apt install -y --no-install-recommends ca-certificates gnupg wget unzip \
+    && rm -rf /var/lib/apt/lists/* \
+    && export GNUPGHOME="$(mktemp -d)" \
+    && gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/mono-official-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
+    && chmod +r /usr/share/keyrings/mono-official-archive-keyring.gpg \
+    && rm -rf "$GNUPGHOME" \
+    && apt purge -y --auto-remove gnupg
+
+RUN echo "deb [signed-by=/usr/share/keyrings/mono-official-archive-keyring.gpg] https://download.mono-project.com/repo/ubuntu stable-focal main" | tee /etc/apt/sources.list.d/mono-official-stable.list \
+    && apt update \
+    && apt install -y binutils curl mono-devel ca-certificates-mono fsharp mono-vbnc nuget referenceassemblies-pcl \
+    && rm -rf /var/lib/apt/lists/* /tmp/*
+
+RUN mkdir -p /usr/src/app/source /usr/src/app/build
+WORKDIR /usr/src/app/source
+
+RUN wget https://github.com/zoffline/BDInfoCLI-ng/archive/refs/heads/UHD_Support_CLI.zip \
+    && unzip UHD_Support_CLI.zip
+
+RUN cd BDInfoCLI-ng-UHD_Support_CLI \
+    && nuget restore -NonInteractive \
+    && msbuild /property:Configuration=Release /property:OutDir=/usr/src/app/build/
+
+FROM ubuntu:24.04 AS mono-runtime
+
+RUN apt update \
+    && apt install -y --no-install-recommends ca-certificates gnupg \
+    && rm -rf /var/lib/apt/lists/* \
+    && export GNUPGHOME="$(mktemp -d)" \
+    && gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/mono-official-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
+    && chmod +r /usr/share/keyrings/mono-official-archive-keyring.gpg \
+    && rm -rf "$GNUPGHOME" \
+    && apt purge -y --auto-remove gnupg
+
+RUN echo "deb [signed-by=/usr/share/keyrings/mono-official-archive-keyring.gpg] https://download.mono-project.com/repo/ubuntu stable-focal main" | tee /etc/apt/sources.list.d/mono-official-stable.list \
+    && apt update \
+    && apt install -y mono-complete \
+    && rm -rf /var/lib/apt/lists/* /tmp/*
+
+RUN mkdir -p /usr/src/app
+
+COPY --from=mono-build /usr/src/app/build /app/bdinfo-cli
+COPY files/bin/bdinfo-cli /usr/local/bin/bdinfo-cli
+
+WORKDIR /usr/src/app
