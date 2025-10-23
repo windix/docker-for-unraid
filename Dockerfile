@@ -8,9 +8,9 @@ ENV TZ=Australia/Melbourne
 WORKDIR /app
 
 RUN apt update \
-    && apt install -y locales openssh-server sudo vim htop aria2 curl wget unzip tmux byobu rename \
+    && apt install -y locales openssh-server sudo vim htop aria2 curl wget tmux byobu rename \
         file ffmpeg imagemagick iputils-ping netcat-openbsd net-tools software-properties-common \
-        whiptail mediainfo rsync rclone \
+        whiptail mediainfo rsync rclone p7zip-full p7zip-rar \
     && apt clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -74,7 +74,7 @@ RUN wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O yt-
 RUN mkdir tmp_bdinfo \
     && cd tmp_bdinfo \
     && wget https://github.com/zoffline/BDInfoCLI-ng/raw/refs/heads/UHD_Support_CLI/prebuilt/BDInfoCLI-ng_v0.7.5.5.zip -O bdinfo-cli.zip \
-    && unzip bdinfo-cli.zip \
+    && 7z x bdinfo-cli.zip \
     && mv BDInfoCLI-ng_v0.7.5.5 /app/bdinfo-cli \
     && cd .. \
     && rm -rf tmp_bdinfo
